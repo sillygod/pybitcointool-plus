@@ -130,6 +130,7 @@ def history(*args):
                     "address": o["addr"],
                     "value": o["value"],
                     "output": tx["hash"]+':'+str(o["n"]),
+                    "time": tx["time"],
                     "block_height": tx.get("block_height", None)
                 }
     for tx in txs:
