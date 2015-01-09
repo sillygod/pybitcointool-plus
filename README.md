@@ -3,6 +3,7 @@
 ### Requirements
 
 python 2.x
+pyqrcode
 
 
 ### Advantages:

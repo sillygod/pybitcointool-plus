@@ -62,6 +62,7 @@ class Wallet:
         out = [{'value': amount, 'address': dest}]
 
         if self.address[:1] != '1':
+            # if not 1, this address is not multi-sig addr
             # how do I apply fee here..
             tx = mktx(h, out)
             sig1 = multisign(tx, 0, self.script, self.priv[0])
