@@ -2,16 +2,16 @@ from bitcoin.main import *
 from bitcoin.transaction import *
 from bitcoin.bci import *
 from bitcoin.deterministic import *
+from bitcoin.blocks import *
 
 
 # Takes privkey, address, value (satoshis), fee (satoshis)
-def send(frm, to, value, fee=1000):
-    tovalues = to + ":" + value
-    return sendmultitx(frm, tovalues, fee)
+def send(frm, to, value, fee=10000):
+    return sendmultitx(frm, to + ":" + str(value), fee)
 
 
 # Takes privkey, "address1:value1,address2:value2" (satoshis), fee (satoshis)
-def sendmultitx(frm, tovalues, fee=1000):
+def sendmultitx(frm, tovalues, fee=10000):
     outs = []
     outvalue = 0
     tv = tovalues.split(",")
@@ -42,12 +42,13 @@ def preparemultitx(frm, *args):
         outs.append(a)
         outvalue += int(a.split(":")[1])
 
-    u = blockr_unspent(frm)
+    u = unspent(frm)
     u2 = select(u, int(outvalue)+int(fee))
     argz = u2 + outs + [frm, fee]
     return mksend(*argz)
 
 
+# BIP32 hierarchical deterministic multisig script
 def bip32_hdm_script(*args):
     if len(args) == 3:
         keys, req, path = args
@@ -62,10 +63,12 @@ def bip32_hdm_script(*args):
     return mk_multisig_script(pubs, req)
 
 
+# BIP32 hierarchical deterministic multisig address
 def bip32_hdm_addr(*args):
     return scriptaddr(bip32_hdm_script(*args))
 
 
+# Setup a coinvault transaction
 def setup_coinvault_tx(tx, script):
     txobj = deserialize(tx)
     N = deserialize_script(script)[-2]
@@ -74,6 +77,7 @@ def setup_coinvault_tx(tx, script):
     return serialize(txobj)
 
 
+# Sign a coinvault transaction
 def sign_coinvault_tx(tx, priv):
     pub = privtopub(priv)
     txobj = deserialize(tx)
@@ -89,3 +93,36 @@ def sign_coinvault_tx(tx, priv):
             scr = [None] + filter(lambda x: x, scr[1:-1])[:k] + [scr[-1]]
         txobj['ins'][j]['script'] = serialize_script(scr)
     return serialize(txobj)
+
+
+# Inspects a transaction
+def inspect(tx):
+    d = deserialize(tx)
+    isum = 0
+    ins = {}
+    for _in in d['ins']:
+        h = _in['outpoint']['hash']
+        i = _in['outpoint']['index']
+        prevout = deserialize(fetchtx(h))['outs'][i]
+        isum += prevout['value']
+        a = script_to_address(prevout['script'])
+        ins[a] = ins.get(a, 0) + prevout['value']
+    outs = []
+    osum = 0
+    for _out in d['outs']:
+        outs.append({'address': script_to_address(_out['script']),
+                     'value': _out['value']})
+        osum += _out['value']
+    return {
+        'fee': isum - osum,
+        'outs': outs,
+        'ins': ins
+    }
+
+
+def merkle_prove(txhash):
+    blocknum = str(get_block_height(txhash))
+    header = get_block_header_data(blocknum)
+    hashes = get_txs_in_block(blocknum)
+    i = hashes.index(txhash)
+    return mk_merkle_proof(header, hashes, i)
