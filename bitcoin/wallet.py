@@ -1,7 +1,7 @@
 from bitcoin import *
 
 
-class Wallet:
+class Wallet(object):
 
     '''a simple wallet for handling *one* private key and contain some function
     like a real world wallet. Furthermore, this can create a sigle key address or multi-sig
