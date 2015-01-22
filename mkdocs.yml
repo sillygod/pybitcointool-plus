@@ -1,0 +1,7 @@
+site_name: Pybitcointool-plus
+
+pages:
+- [index.md, Home]
+- [about.md, About]
+
+theme: readthedocs

@@ -1,4 +1,5 @@
 import bitcoin.main
+from bitcoin import main
 import bitcoin.transaction as tx
 
 # Shared secrets and uncovering pay keys
