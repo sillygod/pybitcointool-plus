@@ -111,7 +111,7 @@ class BlockChainInfoAPI(IBTCApi):
 
         block_height = jsonobj['block_height']
 
-        return block_count - block_height + 1
+        return int(block_count) - int(block_height) + 1
 
     def history(self, address):
         """call pybitcointool history function

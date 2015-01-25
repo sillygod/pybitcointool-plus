@@ -32,6 +32,8 @@ class TestApiImplement(unittest.TestCase):
         print('start test api implement')
         self.address = '1MhxMbEh19LeeiSbEzBhqWFz6TcmiiYojq'
 
+        self.transaction = '7e1e97f2a0ae26a289945187212a680e663060cbcc96c5ede000b6925c5c9774'
+
         self.blockchain = APIFactory.get_class('BlockChainInfoAPI')()
         self.blockr = APIFactory.get_class('BlockrAPI')()
         self.insight = APIFactory.get_class('InsightAPI')()
@@ -39,16 +41,32 @@ class TestApiImplement(unittest.TestCase):
     def tearDown(self):
         pass
 
+    def test_confirmation(self):
+        """test confirmation of transaction.
+        """
+        insight_confirm = self.insight.get_tx_confirmation(self.transaction)
+        blockr_confirm = self.blockr.get_tx_confirmation(self.transaction)
+        blockchain_confirm = self.blockchain.get_tx_confirmation(self.transaction)
+        self.assertEquals(insight_confirm, blockr_confirm)
+        self.assertEquals(insight_confirm, blockchain_confirm)
+
     def test_get_balance(self):
         """use three api to get the balance of specific address
         """
-
-        print(self.insight.get_balance(self.address))
-        print(self.blockr.get_balance(self.address))
+        insight_balance = self.insight.get_balance(self.address)
+        blockr_balance = self.blockr.get_balance(self.address)
         # print(self.blockchain.get_balance(self.address))
+
+        self.assertEquals(insight_balance, blockr_balance)
 
     def test_get_history(self):
         """here, we extract the time and tx infomation
+
+        #TODO: what the fuck
+            the time we extract from the api call is the time which
+        is pushed into block (maybe is the confrim time?)
+
+        block time vs receive time
         """
 
         # print(self.blockchain.history(self.address))

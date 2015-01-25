@@ -21,3 +21,5 @@ class APIFactory(object):
     @staticmethod
     def get_class(id):
         return APIFactory._class_dict[id]
+
+
