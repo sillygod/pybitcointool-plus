@@ -14,6 +14,14 @@ else:
     from urllib import urlencode
 
 
+def satoshi_to_btc(value):
+    return float(value) / 10**8
+
+
+def btc_to_satoshi(value):
+    return value * 10**8
+
+
 def compat_response(response):
     '''In python 3, it will return a byte object
     not return a string. so here, we handle for it
