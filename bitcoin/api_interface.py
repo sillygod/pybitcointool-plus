@@ -1,5 +1,7 @@
 """An Interface for bitcoin api
 Using Factory design pattern to accept to different api address
+
+#DOTO: rule the history format
 """
 
 import abc
@@ -26,7 +28,7 @@ class IBTCApi:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def history(seifl, address):
+    def history(self, address):
         """here we need to make a specific json
         format
         """

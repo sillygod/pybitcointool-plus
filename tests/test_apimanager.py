@@ -67,6 +67,9 @@ class TestApiImplement(unittest.TestCase):
         is pushed into block (maybe is the confrim time?)
 
         block time vs receive time
+
+        really, holy shit!
+        only blockchain info api can get receive time
         """
 
         # print(self.blockchain.history(self.address))
