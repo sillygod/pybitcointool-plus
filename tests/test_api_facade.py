@@ -17,6 +17,9 @@ class TestApiFacade(unittest.TestCase):
         pass
 
     def test_push(self):
+        """well, this test need a real bitcoin coin
+        to test...
+        """
         pass
 
     def test_history(self):

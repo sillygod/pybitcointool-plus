@@ -1,4 +1,5 @@
 from bitcoin import *
+from api_facade import ApiFacade
 
 
 class Wallet(object):
@@ -18,6 +19,7 @@ class Wallet(object):
     '''
 
     def __init__(self):
+        self._api = ApiFacade()
         self.priv = ''
         self.address = ''
         self.script = ''
@@ -32,6 +34,9 @@ class Wallet(object):
 
         self.script = mk_multisig_script(pubkeys, 3, 4)
         self.address = scriptaddr(self.script)
+
+    def get_history(self):
+        return self_api.history()
 
     def createWallet(self, brainwalletpassword):
         self.priv = sha256(brainwalletpassword)
@@ -48,7 +53,7 @@ class Wallet(object):
         return self.priv
 
     def get_balance(self):
-        return unspent(self.address)
+        return self._api.get_balance(self.address)
 
     def sendBTC(self, dest, amount, fee=10000):
         '''In order to send money, we need to get the previous transaction history
@@ -77,4 +82,4 @@ class Wallet(object):
             tx = mksend(h, out, self.address, fee) # it is really able to set fee
             tx2 = sign(tx, 0, self.priv)
 
-        return pushtx(tx2)
+        return self._api.pushtx(tx2)
