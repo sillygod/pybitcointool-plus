@@ -140,6 +140,7 @@ def history(*args):
                     ':'+str(inp["prev_out"]["n"])
                 if outs.get(key):
                     outs[key]["spend"] = tx["hash"]+':'+str(i)
+    print(outs)
     return [outs[k] for k in outs]
 
 
