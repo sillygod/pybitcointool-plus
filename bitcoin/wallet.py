@@ -1,12 +1,20 @@
+from util import btc_to_satoshi
+from util import satoshi_to_btc
 from bitcoin import *
 from api_facade import ApiFacade
 
 
-def simple_tx_inputs_outputs(from_addr, from_addr_unspent, to_addr, amount_to_send, txfee):
-    if get_address_network_type(from_addr) != get_address_network_type(to_addr):
-        raise Exception('Attempting to create transaction between networks!')
+def get_balance(unspent):
+    balance = 0
 
-    selected_unspent = bc.select(from_addr_unspent, amount_to_send + txfee)
+    for u in unspent:
+        balance += u['value']
+    return balance
+
+
+def simple_tx_inputs_outputs(from_addr, from_addr_unspent, to_addr, amount_to_send, txfee):
+
+    selected_unspent = select(from_addr_unspent, amount_to_send + txfee)
     selected_unspent_bal = get_balance(selected_unspent)
     changeval = selected_unspent_bal - amount_to_send - txfee
 
@@ -30,64 +38,6 @@ def simple_tx_inputs_outputs(from_addr, from_addr_unspent, to_addr, amount_to_se
         tx_outs.append({'value': changeval, 'address': from_addr})
 
     return selected_unspent, tx_outs
-
-
-def sign_tx(self, pw):
-        if not self.is_wallet_loaded:
-            raise Exception('Tried to spend when wallet not loaded.')
-
-        if not self.is_dest_addr_set:
-            raise Exception('Tried to spend when destination address not set.')
-
-        if not self.is_send_amount_set:
-            raise Exception('Tried to spend when amount not set.')
-
-        if self.send_amount + self.txfee > self.balance:
-            raise LowBalanceError("Insufficient funds to send {0} + {1} BTC.".format(
-                core.satoshi_to_btc(self.send_amount), core.satoshi_to_btc(self.txfee)))
-
-        try:
-            prv = wallet.decrypt_privkey(self.encr_privkey, pw)
-            addr = bc.privtoaddr(prv, self.magic_byte)
-        except:
-            raise PasswordError("Wrong password!")
-
-        if addr != self.addr:
-            raise Exception(
-                'Address from wallet does not match address from private key!')
-
-        tx_ins, tx_outs = core.simple_tx_inputs_outputs(
-            self.addr, self.unspent, self.dest_addr, self.send_amount, self.txfee)
-
-        # Make transaction
-        tx = bc.mktx(tx_ins, tx_outs)
-
-        # Sign transaction
-        for i in range(len(tx_ins)):
-            tx = bc.sign(tx, i, prv)
-
-        return tx_ins, tx_outs, tx, bc.deserialize(tx)
-
-
-def push_tx(self, tx):
-    # Send transaction
-        if self.user_mode == 'mainnet':
-            try:
-                bc.pushtx(tx)
-            except:
-                try:
-                    bc.eligius_pushtx(tx)
-                except:
-                    raise IOError("Unable to push transaction!")
-        elif self.user_mode == 'testnet':
-            try:
-                bc.blockr_pushtx(tx, 'testnet')
-            except:
-                raise IOError("Unable to push transaction!")
-        else:
-            raise Exception("User mode {0} not supported for push_tx.".format(self.user_mode))
-
-        return
 
 
 class Wallet(object):
@@ -123,8 +73,24 @@ class Wallet(object):
         self.script = mk_multisig_script(pubkeys, 3, 4)
         self.address = scriptaddr(self.script)
 
+    def sign_tx(self, to_address, amount, txfee):
+        # if self.send_amount + self.txfee > self.balance:
+        #     raise LowBalanceError("Insufficient funds to send {0} + {1} BTC.".format(
+        #         satoshi_to_btc(self.send_amount), satoshi_to_btc(self.txfee)))
+        unspent_tx = unspent(self.address)
+
+        tx_ins, tx_outs = simple_tx_inputs_outputs(
+            self.address, unspent_tx, to_address, amount, txfee)
+
+        tx = mktx(tx_ins, tx_outs)
+        # Sign transaction
+        for i in range(len(tx_ins)):
+            tx = sign(tx, i, self.priv)
+
+        return tx_ins, tx_outs, tx, deserialize(tx)
+
     def get_history(self):
-        return self_api.history()
+        return self._api.history(self.address)
 
     def createWallet(self, brainwalletpassword):
         self.priv = sha256(brainwalletpassword)
@@ -166,11 +132,5 @@ class Wallet(object):
             return self._api.pushtx(tx2)
 
         else:
-            # tx = mktx(h, outs)
-            # tx2 = sign(tx, 0, self.priv)
-            # tx3 = sign(tx2, 1, self.priv)
-            # it is really able to set fee
-            tx = mksend(h, outs, self.address, fee)
-            tx2 = sign(tx, 1, self.priv)
-
-            return self._api.pushtx(tx2)
+            tx = self.sign_tx(dest, amount, fee)[2]
+            return self._api.pushtx(tx)
