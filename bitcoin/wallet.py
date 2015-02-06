@@ -5,15 +5,17 @@ from api_facade import ApiFacade
 
 
 def get_balance(unspent):
+    """get balance from the unspent BTC
+    """
     balance = 0
-
     for u in unspent:
         balance += u['value']
     return balance
 
 
 def simple_tx_inputs_outputs(from_addr, from_addr_unspent, to_addr, amount_to_send, txfee):
-
+    """
+    """
     selected_unspent = select(from_addr_unspent, amount_to_send + txfee)
     selected_unspent_bal = get_balance(selected_unspent)
     changeval = selected_unspent_bal - amount_to_send - txfee
@@ -59,6 +61,7 @@ class Wallet(object):
     def __init__(self):
         self._api = ApiFacade()
         self.priv = ''
+        self.pub = ''
         self.address = ''
         self.script = ''
 
@@ -92,8 +95,18 @@ class Wallet(object):
     def get_history(self):
         return self._api.history(self.address)
 
-    def createWallet(self, brainwalletpassword):
+    def createBrainWallet(self, brainwalletpassword):
+        """according to the password you want.
+        To generate a private key
+        """
         self.priv = sha256(brainwalletpassword)
+        self.pub = privtopub(self.priv)
+        self.address = pubtoaddr(self.pub)
+
+    def createWallet(self):
+        """create a wallet with a random key
+        """
+        self.priv = random_key()
         self.pub = privtopub(self.priv)
         self.address = pubtoaddr(self.pub)
 
@@ -101,6 +114,7 @@ class Wallet(object):
         '''This is for single key use..
         '''
         self.priv = privatekey
+        self.pub = privtopub(self.priv)
         self.address = privtoaddr(privatekey)
 
     def export_privatekey(self):
