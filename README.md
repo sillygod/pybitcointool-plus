@@ -20,3 +20,26 @@ python setup install
 here is the [document](https://sillygod.github.io/pybitcointool-plus)
 
 
+### How to use RPC server
+
+start a rpc server
+
+```sh
+python rpcServer.py
+```
+
+then use post method anyway you like to get return value
+
+for example, you can see my test case for rpc `tests/test_rpc.py`
+
+the data format is
+
+```
+{'method': 'the method you want to call',
+ 'id': 'null',  # or num you want :)
+ 'param': ''}
+
+```
+
+
+

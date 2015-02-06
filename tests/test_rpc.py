@@ -21,7 +21,7 @@ class TestRPC(unittest.TestCase):
     def testSendCreateWallet(self):
 
         url = 'http://localhost:8778'
-        data = {'method': 'createWallet', 'id':1, 'param': ''}
+        data = {'method': 'createWallet', 'id': 'null', 'param': ''}
 
         r = requests.post(url, data=json.dumps(data))
         print(r.json()['result'])
